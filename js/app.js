@@ -1,3 +1,4 @@
+
 //Class Game. Stores game related information
 //Lives, level, number of enemies...
 var Game = function () {
@@ -5,60 +6,86 @@ var Game = function () {
     this.level = 0;
     this.numberOfEnemies = 0; 
     this.running = 0;
-    this.score = 0;
+    this.world = {};
+    this.player= {};
+    this.allEnemies= {};
+    this.princess = {};
+    this.extras = {};
 };
 
-Game.prototype.start = function() {
-    world.tileMap = world.maps[this.level-1];
-    this.running = 1;
-
-    //Enemies from previous level are reused, only new ones are added
-    for (var enemyIndex = allEnemies.length; enemyIndex < game.numberOfEnemies * this.level ; enemyIndex++) {
-        allEnemies.push(new Enemy('images/enemy-bug.png'));
+Game.prototype.startLevel = function(reset) {
+    if (reset) {
+        this.level = 1;
+        this.lives = 3;
+        this.score = 0;
     }
+
+    this.world.tileMap = this.world.maps[this.level-1];
+    this.running = 1;
+    //Enemies from previous level are reused, only new ones are added
+    for (var enemyIndex = this.allEnemies.length; enemyIndex < this.numberOfEnemies * this.level ; enemyIndex++) {
+        this.allEnemies.push(new Enemy('images/enemy-bug.png'));
+    }
+    this.princess = this.extras[this.level - 1];
 };
 
 Game.prototype.init = function(level, lives, score) {
     //world variable is filled by the data in engine.js
     //and used by the entities;
-    world = new World();
+    this.world = new World();
 
     this.lives = lives;
     this.level = level;
-    this.numberOfEnemies = 5; 
+    this.numberOfEnemies = 1; 
 
     //Enemies are spawned when the game is started.
-    allEnemies = [];
+    this.allEnemies = [];
 
-    player = new Player('images/char-boy.png');
-    princess = new Actor('images/char-princess-girl.png');
-    extras = []; 
-    extras.push (new Actor('images/char-cat-girl.png'));
-    extras.push (new Actor('images/char-pink-girl.png'));
-    extras.push (new Actor('images/char-horn-girl.png'));
-    extras.push (new Actor('images/Heart.png'));
+    this.player = new Player('images/char-boy.png');
+    this.extras = []; 
+    this.extras.push (new Actor('images/char-cat-girl.png'));
+    this.extras.push (new Actor('images/char-pink-girl.png'));
+    this.extras.push (new Actor('images/char-horn-girl.png'));
+    this.extras.push (new Actor('images/char-princess-girl.png'));
+    this.extras.push (new Actor('images/Heart.png'));
 };
+
+Game.prototype.checkCollisions = function()  {
+    if (this.running === 1) { 
+        //Collision boundary. Not really precise, but will do for 
+        //this game
+        var collisionZone = 50;
+        this.allEnemies.forEach(function(enemy) {
+            if ((Math.abs(enemy.x - game.player.x) < collisionZone) &&
+                (Math.abs(enemy.y - game.player.y) < collisionZone)) {
+                    this.lives--;
+                    if (this.lives === 0) {
+                        game.startLevel(true);
+                    }
+                    this.player.tileX = this.world.tileMap.playerStartTile.x;
+                    this.player.tileY = this.world.tileMap.playerStartTile.y;
+                }
+        },this);
+    }
+}
 
 Game.prototype.victorySequence = function() {
     //End sequence. Not very flexible, but it's one-off
     this.running = 0;
-    world.tileMap = world.victoryMap; 
+    this.world.tileMap = this.world.victoryMap; 
     //Characters will be placed on the grass tiles of victoryMap
-    var endTiles = world.getTilesOfType('g');
-    console.log(endTiles);
-    princess.tileX = endTiles[0].x; 
-    princess.tileY = endTiles[0].y; 
-    player.tileX = endTiles[2].x; 
-    player.tileY = endTiles[2].y; 
-    extras[0].init(endTiles[3]);
-    extras[1].init(endTiles[4]);
-    extras[2].init(endTiles[5]);
-    extras[3].init(endTiles[1]);
+    var endTiles = this.world.getTilesOfType('g');
+    this.player.tileX = endTiles[0].x; 
+    this.player.tileY = endTiles[0].y; 
+    this.extras[0].init(endTiles[3]);
+    this.extras[1].init(endTiles[4]);
+    this.extras[2].init(endTiles[5]);
+    this.extras[3].init(endTiles[2]);
+    this.extras[4].init(endTiles[1]);
     //Hide enemies
-    allEnemies.forEach(function(enemy) {
-        enemy.x = -world.tileSize.x;
-        enemy.speed = 0; 
-    });
+    this.allEnemies.forEach(function(enemy) {
+        enemy.draw = false;
+    } );
 };
 
 var World = function() {
@@ -152,6 +179,30 @@ var World = function() {
             's','s','s','s','s','s','s',
             'g','g','g','g','g','g','g'
         ]
+    },
+    {
+        totalTiles: {
+            x: 7,
+            y: 12 
+        },
+        playerStartTile : {
+            x: 3,
+            y: 11 
+        },
+        map:[
+            'w','w','w','x','w','w','w',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            'g','g','g','g','g','g','g'
+        ]
     }
     ];
     //This is the map used for the current game
@@ -165,12 +216,14 @@ var World = function() {
 World.prototype.checkVictory = function()  {
     if (game.running === 1) { 
         var collisionZone = 50;
-        if ((Math.abs(princess.x - player.x) < collisionZone) &&
-                (Math.abs(princess.y - player.y) < collisionZone)) {
+        if ((Math.abs(game.princess.x - game.player.x) < collisionZone) &&
+                (Math.abs(game.princess.y - game.player.y) < collisionZone)) {
                     console.log(game.level);
                     game.level++;
-                    if (game.level <= 3) {
-                        game.start(game.level,3,0);
+                    if (game.level <= game.world.maps.length) {
+                        game.princess.draw = false;
+                        game.score += 1000;
+                        game.startLevel(false);
                         return true;
                     } else {
                         game.victorySequence();
@@ -180,21 +233,10 @@ World.prototype.checkVictory = function()  {
     }
     return false;
 }
-World.prototype.checkCollisions = function()  {
-    if (game.running === 1) { 
-        var collisionZone = 50;
-        allEnemies.forEach(function(enemy) {
-            if ((Math.abs(enemy.x - player.x) < collisionZone) &&
-                (Math.abs(enemy.y - player.y) < collisionZone)) {
-                    game.lives--;
-                    player.tileX = world.tileMap.playerStartTile.x;
-                    player.tileY = world.tileMap.playerStartTile.y;
-                }
-        });
-    }
-}
+
 
 World.prototype.init = function(sizeInPixels, tileSize) {
+    console.log(this);
     this.sizeInPixels = sizeInPixels;
     this.tileSize = tileSize;
     console.log(this);
@@ -232,8 +274,7 @@ World.prototype.enemyRows= function() {
 World.prototype.getTilesOfType= function(type) {
     var result = []; 
     for (var tileMapIndex = 0; tileMapIndex < this.tileMap.map.length; tileMapIndex ++) {
-        if (world.tileMap.map[tileMapIndex] === type) {
-            console.log(tileMapIndex);
+        if (this.tileMap.map[tileMapIndex] === type) {
             result.push({
                 x: Math.floor(tileMapIndex % this.tileMap.totalTiles.x),
                 y: Math.floor(tileMapIndex / this.tileMap.totalTiles.x) 
@@ -254,9 +295,9 @@ var Actor = function(sprite, startX, startY) {
     this.tileX = 0;
     this.tileY = 0;
 
-    //Won't update or render if not initialized
-    this.isInitialized = false;
-    
+    //Won't render if set to false 
+    this.draw = false;
+
     //The image/sprite for the actor
     this.sprite = sprite;
 }
@@ -264,26 +305,23 @@ var Actor = function(sprite, startX, startY) {
 Actor.prototype.init = function(tile) {
     this.tileX = tile.x;
     this.tileY = tile.y;
-    this.isInitialized = true;
+    this.draw = true;
 }
 
 // Draw the actor on the screen
 Actor.prototype.render = function() {
-    if (this.isInitialized) {
+    if (this.draw) {
         ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
     }
 }
 
-
 // Draw the actor on the screen
 Actor.prototype.update= function() {
-    if (this.isInitialized) {
-        this.x = this.tileX * world.tileSize.x;
-        this.y = this.tileY * world.tileSize.y - world.tileSize.y/2;
-    }
+    this.x = this.tileX * game.world.tileSize.x;
+    this.y = this.tileY * game.world.tileSize.y - game.world.tileSize.y/2;
 }
 
-// Player  
+// Player variable 
 var Player = function(sprite) {
     Actor.call(this, sprite, 0, 0);
     //Actor movement (in tiles, not pixels)
@@ -298,12 +336,12 @@ Player.prototype = Object.create(Actor.prototype);
 Player.prototype.constructor = Player;
 Player.prototype.init= function() {
     //Actor position (in tiles, not pixels)
-    this.tileX = world.tileMap.playerStartTile.x;
-    this.tileY = world.tileMap.playerStartTile.y;
+    this.tileX = game.world.tileMap.playerStartTile.x;
+    this.tileY = game.world.tileMap.playerStartTile.y;
 
-    this.stepSizeX = world.tileSize.x; 
-    this.stepSizeY = world.tileSize.y; 
-    this.isInitialized = true;
+    this.stepSizeX = game.world.tileSize.x; 
+    this.stepSizeY = game.world.tileSize.y; 
+    this.draw = true;
 };
 
 Player.prototype.update = function(dt) {
@@ -315,14 +353,14 @@ Player.prototype.update = function(dt) {
 
     //Calculate new coordinates in tiles space
 
-    if (this.isInitialized) {
+    if (this.draw) {
         var newTileX = this.tileX + this.stepX;
         var newTileY = this.tileY + this.stepY;
 
         //Check for boundaries
-        if (world.isTileWalkable(newTileX,newTileY)) { 
+        if (game.world.isTileWalkable(newTileX,newTileY)) { 
             //Check for win condition
-            if (newTileX >= 0 && newTileX < world.tileMap.totalTiles.x){
+            if (newTileX >= 0 && newTileX < game.world.tileMap.totalTiles.x){
                 //Update position in tiles space
                 this.tileX = newTileX;
 
@@ -331,14 +369,14 @@ Player.prototype.update = function(dt) {
             }
 
             //Check for boundaries
-            if (newTileY >= 0 && newTileY < world.tileMap.totalTiles.y){
+            if (newTileY >= 0 && newTileY < game.world.tileMap.totalTiles.y){
                 //Update position in tiles space
                 this.tileY = newTileY;
 
                 //Update position in world space
                 this.y = (this.tileY - 1)* this.stepSizeY;
                 //Center player on the tile
-                this.y += world.tileSize.y/2;
+                this.y += game.world.tileSize.y/2;
             }
         }
 
@@ -380,12 +418,12 @@ Enemy.prototype.constructor = Enemy;
 
 Enemy.prototype.init = function() {
    //Enemies are spawned at a random row, always one tile before the leftmost one 
-   var rows = world.enemyRows();
+   var rows = game.world.enemyRows();
    var randomRow = rows[Math.floor(Math.random()*rows.length)];
-   this.x = -world.tileSize.x; 
-   this.y = randomRow * world.tileSize.y - world.tileSize.y/2; 
+   this.x = -game.world.tileSize.x; 
+   this.y = randomRow * game.world.tileSize.y - game.world.tileSize.y/2; 
    this.speed = 100 + Math.random()*200;
-   this.isInitialized = true;
+   this.draw = true;
 }
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
@@ -394,7 +432,7 @@ Enemy.prototype.update = function(dt) {
     // which will ensure the game runs at the same speed for
     // all computers.
 
-    if (this.isInitialized) {
+    if (this.draw) {
         var newTileX = this.tileX + this.stepX;
         // Enemy moves horizontally 
         var newX = this.x + dt*this.speed;
@@ -404,7 +442,7 @@ Enemy.prototype.update = function(dt) {
 
         //Enemies are not created and destroyed, they are reused for the duration
         //of the game
-        if (newX < world.sizeInPixels.width) {
+        if (newX < game.world.sizeInPixels.width + game.world.tileSize.x) {
             this.x = newX;
         } else {
             this.init() ;
@@ -416,7 +454,7 @@ Enemy.prototype.update = function(dt) {
 //game variable is the main variable representing current game state 
 var game = new Game();
 game.init(1,3,0);
-game.start();
+game.startLevel();
 
 
 // This listens for key presses and sends the keys to your
@@ -429,5 +467,5 @@ document.addEventListener('keyup', function(e) {
         40: 'down'
     };
 
-    player.handleInput(allowedKeys[e.keyCode]);
+    game.player.handleInput(allowedKeys[e.keyCode]);
 });

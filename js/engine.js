@@ -86,13 +86,11 @@ var Engine = (function(global) {
      * on the entities themselves within your app.js file).
      */
     function update(dt) {
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0,0,ctx.canvas.clientWidth,ctx.canvas.clientHeight);
         updateEntities(dt);
-        if (world.checkVictory()) {
+        if (game.world.checkVictory()) {
             reset();
         }
-        world.checkCollisions();
+        game.checkCollisions();
     }
 
     /* 
@@ -106,14 +104,14 @@ var Engine = (function(global) {
      * render methods.
      */
     function updateEntities(dt) {
-        allEnemies.forEach(function(enemy) {
+        game.allEnemies.forEach(function(enemy) {
             enemy.update(dt);
         });
-        extras.forEach(function(extra) {
+        game.extras.forEach(function(extra) {
             extra.update();
         });
-        player.update(dt);
-        princess.update();
+        game.player.update(dt);
+        game.princess.update();
     }
 
     /* This function initially draws the "game level", it will then call
@@ -126,6 +124,9 @@ var Engine = (function(global) {
         /* This array holds the relative URL to the image used
          * for that particular row of the game level.
          */
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0,0,ctx.canvas.clientWidth,ctx.canvas.clientHeight);
+
         var rowImages = [
                 'images/water-block.png',   // Top row is water
                 'images/stone-block.png',   // Row 1 of 3 of stone
@@ -134,8 +135,8 @@ var Engine = (function(global) {
                 'images/grass-block.png',   // Row 1 of 2 of grass
                 'images/grass-block.png'    // Row 2 of 2 of grass
             ],
-            numRows = world.tileMap.totalTiles.y,
-            numCols = world.tileMap.totalTiles.x,
+            numRows = game.world.tileMap.totalTiles.y,
+            numCols = game.world.tileMap.totalTiles.x,
             row, col;
 
         /* Loop through the number of rows and columns we've defined above
@@ -153,7 +154,7 @@ var Engine = (function(global) {
                  */
                 // Modified so that it reads the tileMap array in world.
                 var resource;
-                switch (world.tileMap.map[col + numCols*row])   {
+                switch (game.world.tileMap.map[col + numCols*row])   {
                     case 'w':
                         resource = 'images/water-block.png';   
                         break;
@@ -169,12 +170,12 @@ var Engine = (function(global) {
                         resource = 'images/grass-block.png';   
                         break;
                 }
-                ctx.drawImage(Resources.get(resource), col * world.tileSize.x, row * world.tileSize.y);
+                ctx.drawImage(Resources.get(resource), col * game.world.tileSize.x, row * game.world.tileSize.y);
             }
         }
 
-
         renderEntities();
+        renderTopBar();
     }
 
     /* This function is called by the render function and is called on each game
@@ -185,16 +186,16 @@ var Engine = (function(global) {
         /* Loop through all of the objects within the allEnemies array and call
          * the render function you have defined.
          */
-        allEnemies.forEach(function(enemy) {
+        game.allEnemies.forEach(function(enemy) {
             enemy.render();
         });
 
-        extras.forEach(function(extra) {
+        game.extras.forEach(function(extra) {
             extra.render();
         });
 
-        player.render();
-        princess.render();
+        game.player.render();
+        game.princess.render();
     }
 
     /* This function does nothing but it could have been a good place to
@@ -206,18 +207,38 @@ var Engine = (function(global) {
         var pixelDimensions = { width: canvas.width, height: canvas.height };
         var tileSize= { x: 101, y: 83 };
 
-        world.init(
+        game.world.init(
                 pixelDimensions,
                 tileSize);
 
-        canvas.width = 101 * world.tileMap.totalTiles.x;
-        canvas.height= 101 * world.tileMap.totalTiles.y;
+        canvas.width = 101 * game.world.tileMap.totalTiles.x;
+        canvas.height= 101 * game.world.tileMap.totalTiles.y;
 
-        player.init();
-        princess.init(world.getTilesOfType('x')[0]);
-        allEnemies.forEach(function(enemy) {
+        game.player.init();
+        game.princess.init(game.world.getTilesOfType('x')[0]);
+        game.allEnemies.forEach(function(enemy) {
             enemy.init();
         });
+    }
+    //Drawing the topbar
+    //I'm saving the context properties and restore them once drawn,
+    //to not mess up the rest of the render code for images 
+    function renderTopBar() {
+        ctx.save();
+        ctx.globalAlpha = 0.7; 
+        ctx.font = '28px Impact'; 
+        ctx.lineWidth = 1; 
+        ctx.textAlign= 'start'; 
+        ctx.strokeStyle = 'black'; 
+
+        //Using the alignment options to render part of the text to the left
+        //and the second part to the right
+        var topBarTextLeft  = 'Level: ' + game.level + ' Lives: ' + game.lives ;
+        ctx.strokeText(topBarTextLeft, 10 , 40);
+        var topBarTextRight  =  'Score: ' + game.score;
+        ctx.textAlign= 'end'; 
+        ctx.strokeText(topBarTextRight, canvas.width - 10, 40);
+        ctx.restore();
     }
 
     /* Go ahead and load all of the images we know we're going to need to
@@ -243,7 +264,4 @@ var Engine = (function(global) {
      * from within their app.js files.
      */
     global.ctx = ctx;
-    //Doing the same with world. It could be passed around by single methods
-    //But since it is used in multiple places and won't change during the game
-    //It is more convenient to have it global.
 })(this);
