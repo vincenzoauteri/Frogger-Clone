@@ -73,27 +73,6 @@ var Engine = (function(global) {
     function init() {
         reset();
         lastTime = Date.now();
-        //Init world variable used to draw the map and update entitites
-        
-        var pixelDimensions = { width: canvas.width, height: canvas.height };
-        var totalMapTiles = { x: 5, y: 6 };
-        var playerStartTiles = { x: 2, y: 5 };
-        var tileSize= { x: 101, y: 83 };
-
-        canvas.width = 101 * totalMapTiles.x;
-        canvas.height= 101 * totalMapTiles.y;
-
-        world.init(
-                pixelDimensions,
-                totalMapTiles,
-                playerStartTiles,
-                tileSize);
-
-        player.init();
-        princess.init(world.getTilesOfType('x')[0]);
-        allEnemies.forEach(function(enemy) {
-            enemy.init();
-        });
         main();
     }
 
@@ -110,6 +89,9 @@ var Engine = (function(global) {
         ctx.fillStyle = 'white';
         ctx.fillRect(0,0,ctx.canvas.clientWidth,ctx.canvas.clientHeight);
         updateEntities(dt);
+        if (world.checkVictory()) {
+            reset();
+        }
         world.checkCollisions();
     }
 
@@ -152,8 +134,8 @@ var Engine = (function(global) {
                 'images/grass-block.png',   // Row 1 of 2 of grass
                 'images/grass-block.png'    // Row 2 of 2 of grass
             ],
-            numRows = world.totalTiles.y,
-            numCols = world.totalTiles.x,
+            numRows = world.tileMap.totalTiles.y,
+            numCols = world.tileMap.totalTiles.x,
             row, col;
 
         /* Loop through the number of rows and columns we've defined above
@@ -171,7 +153,7 @@ var Engine = (function(global) {
                  */
                 // Modified so that it reads the tileMap array in world.
                 var resource;
-                switch (world.tileMap[col + numCols*row])   {
+                switch (world.tileMap.map[col + numCols*row])   {
                     case 'w':
                         resource = 'images/water-block.png';   
                         break;
@@ -220,7 +202,22 @@ var Engine = (function(global) {
      * those sorts of things. It's only called once by the init() method.
      */
     function reset() {
-        // noop
+        //Init world variable used to draw the map and update entitites
+        var pixelDimensions = { width: canvas.width, height: canvas.height };
+        var tileSize= { x: 101, y: 83 };
+
+        world.init(
+                pixelDimensions,
+                tileSize);
+
+        canvas.width = 101 * world.tileMap.totalTiles.x;
+        canvas.height= 101 * world.tileMap.totalTiles.y;
+
+        player.init();
+        princess.init(world.getTilesOfType('x')[0]);
+        allEnemies.forEach(function(enemy) {
+            enemy.init();
+        });
     }
 
     /* Go ahead and load all of the images we know we're going to need to

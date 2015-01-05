@@ -1,13 +1,43 @@
 //Class Game. Stores game related information
 //Lives, level, number of enemies...
 var Game = function () {
-    this.lives = 3;
-    this.level = 1;
-    this.numberOfEnemies = 5; 
-    this.running = 1;
+    this.lives = 0;
+    this.level = 0;
+    this.numberOfEnemies = 0; 
+    this.running = 0;
     this.score = 0;
 };
 
+Game.prototype.start = function() {
+    world.tileMap = world.maps[this.level-1];
+    this.running = 1;
+
+    //Enemies from previous level are reused, only new ones are added
+    for (var enemyIndex = allEnemies.length; enemyIndex < game.numberOfEnemies * this.level ; enemyIndex++) {
+        allEnemies.push(new Enemy('images/enemy-bug.png'));
+    }
+};
+
+Game.prototype.init = function(level, lives, score) {
+    //world variable is filled by the data in engine.js
+    //and used by the entities;
+    world = new World();
+
+    this.lives = lives;
+    this.level = level;
+    this.numberOfEnemies = 5; 
+
+    //Enemies are spawned when the game is started.
+    allEnemies = [];
+
+    player = new Player('images/char-boy.png');
+    princess = new Actor('images/char-princess-girl.png');
+    extras = []; 
+    extras.push (new Actor('images/char-cat-girl.png'));
+    extras.push (new Actor('images/char-pink-girl.png'));
+    extras.push (new Actor('images/char-horn-girl.png'));
+    extras.push (new Actor('images/Heart.png'));
+};
 
 Game.prototype.victorySequence = function() {
     //End sequence. Not very flexible, but it's one-off
@@ -15,6 +45,7 @@ Game.prototype.victorySequence = function() {
     world.tileMap = world.victoryMap; 
     //Characters will be placed on the grass tiles of victoryMap
     var endTiles = world.getTilesOfType('g');
+    console.log(endTiles);
     princess.tileX = endTiles[0].x; 
     princess.tileY = endTiles[0].y; 
     player.tileX = endTiles[2].x; 
@@ -28,8 +59,6 @@ Game.prototype.victorySequence = function() {
         enemy.x = -world.tileSize.x;
         enemy.speed = 0; 
     });
-
-    
 };
 
 var World = function() {
@@ -38,16 +67,6 @@ var World = function() {
         width: 0,
         height: 0
     }
-    //Size of the world (in tiles)
-    this.totalTiles = {
-        x: 0, 
-        y: 0
-    };
-    //Player start position
-    this.playerStartTile = {
-        x: 0,
-        y: 0
-    };
     this.tileSize= {
         x: 0,
         y: 0
@@ -57,62 +76,128 @@ var World = function() {
     //'s' for stone
     //'g' for grass
     //'x' for goal 
-    this.victoryMap= [ 
+    this.victoryMap =  
+    {
+        totalTiles: {
+            x: 5,
+            y: 6
+        },
+        map: [
         'w','w','w','w','w',
         's','w','w','w','s',
         's','w','s','w','s',
         's','g','g','g','s',
         'g','w','w','w','g',
         's','s','g','s','s'
-        ];
-    this.maps= [ 
-        [
+        ]
+    };
+
+    this.maps= [
+    { 
+        totalTiles :{
+            x: 5,
+            y: 6
+        },
+        playerStartTile : {
+            x: 2,
+            y: 5
+        },
+        map: [
         'w','w','x','w','w',
         's','s','s','s','s',
         's','s','s','s','s',
         's','s','s','s','s',
         'g','g','g','g','g',
         'g','g','g','g','g'
-        ], 
-        [
-        's','s','x','s','s',
-        's','s','s','s','s',
-        'w','w','g','w','w',
-        's','s','s','s','s',
-        's','s','s','s','s',
-        'g','g','g','g','g'
+        ] 
+    }, 
+    {
+        totalTiles: {
+            x: 5,
+            y: 8
+        },
+        playerStartTile : {
+            x: 2,
+            y: 7
+        },
+        map:[
+            'w','w','x','w','w',
+            's','s','s','s','s',
+            's','s','s','s','s',
+            's','s','s','s','s',
+            'w','w','g','w','w',
+            's','s','s','s','s',
+            's','s','s','s','s',
+            'g','g','g','g','g'
         ]
+    },
+    {
+        totalTiles: {
+            x: 7,
+            y: 10 
+        },
+        playerStartTile : {
+            x: 3,
+            y: 9
+        },
+        map:[
+            'w','w','w','x','w','w','w',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            'w','w','g','g','g','w','w',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            's','s','s','s','s','s','s',
+            'g','g','g','g','g','g','g'
+        ]
+    }
     ];
     //This is the map used for the current game
-    this.tileMap = this.maps[0];
+    this.tileMap = {};
     //Tiles on which the player can walk
     this.walkableTiles = ['g','s','x'];
     //Tiles on which the enemy can be spawned 
     this.enemyTiles= ['s'];
 };
 
-World.prototype.checkCollisions = function()  {
+World.prototype.checkVictory = function()  {
     if (game.running === 1) { 
         var collisionZone = 50;
         if ((Math.abs(princess.x - player.x) < collisionZone) &&
                 (Math.abs(princess.y - player.y) < collisionZone)) {
-                    game.victorySequence();
+                    console.log(game.level);
+                    game.level++;
+                    if (game.level <= 3) {
+                        game.start(game.level,3,0);
+                        return true;
+                    } else {
+                        game.victorySequence();
+                    }
                 }
+    
+    }
+    return false;
+}
+World.prototype.checkCollisions = function()  {
+    if (game.running === 1) { 
+        var collisionZone = 50;
         allEnemies.forEach(function(enemy) {
             if ((Math.abs(enemy.x - player.x) < collisionZone) &&
                 (Math.abs(enemy.y - player.y) < collisionZone)) {
-                    player.tileX = world.playerStartTile.x;
-                    player.tileY = world.playerStartTile.y;
+                    game.lives--;
+                    player.tileX = world.tileMap.playerStartTile.x;
+                    player.tileY = world.tileMap.playerStartTile.y;
                 }
         });
     }
 }
 
-World.prototype.init = function(sizeInPixels, totalTiles, playerStartTile, tileSize) {
+World.prototype.init = function(sizeInPixels, tileSize) {
     this.sizeInPixels = sizeInPixels;
-    this.totalTiles = totalTiles;
-    this.playerStartTile = playerStartTile;
     this.tileSize = tileSize;
+    console.log(this);
 }
 
 //Check if player can walk on tile, in which case the tile type is listed
@@ -120,7 +205,7 @@ World.prototype.init = function(sizeInPixels, totalTiles, playerStartTile, tileS
 World.prototype.isTileWalkable = function(tileX, tileY) {
     var result = false;
     
-    var tileType = this.tileMap[tileX + tileY*this.totalTiles.x];
+    var tileType = this.tileMap.map[tileX + tileY*this.tileMap.totalTiles.x];
 
     if (tileType &&  (this.walkableTiles.indexOf(tileType) > -1)){
         //If tile exists and it is walkable returns true
@@ -133,10 +218,10 @@ World.prototype.isTileWalkable = function(tileX, tileY) {
 //Returns an array with the indexes of the rows on which enemies can be spawned
 World.prototype.enemyRows= function() {
     var result = [];
-    for (var rowIndex = 0; rowIndex < this.totalTiles.y; rowIndex++){
+    for (var rowIndex = 0; rowIndex < this.tileMap.totalTiles.y; rowIndex++){
         //Reads only the first tile of each row, it is enough since
         //enemy rows must be omogenous
-        var tileType = this.tileMap[rowIndex*this.totalTiles.x];
+        var tileType = this.tileMap.map[rowIndex*this.tileMap.totalTiles.x];
         if (tileType &&  (this.enemyTiles.indexOf(tileType) > -1)){
             result.push(rowIndex);
         }
@@ -146,12 +231,12 @@ World.prototype.enemyRows= function() {
 //Returns an array with the tiles coordinates of a specific type
 World.prototype.getTilesOfType= function(type) {
     var result = []; 
-    for (var tileMapIndex = 0; tileMapIndex< this.tileMap.length; tileMapIndex ++) {
-        if (world.tileMap[tileMapIndex] === type) {
-             Math.floor(tileMapIndex / this.totalTiles.y); 
+    for (var tileMapIndex = 0; tileMapIndex < this.tileMap.map.length; tileMapIndex ++) {
+        if (world.tileMap.map[tileMapIndex] === type) {
+            console.log(tileMapIndex);
             result.push({
-                x: Math.floor(tileMapIndex % this.totalTiles.x),
-                y: Math.floor(tileMapIndex / this.totalTiles.x) 
+                x: Math.floor(tileMapIndex % this.tileMap.totalTiles.x),
+                y: Math.floor(tileMapIndex / this.tileMap.totalTiles.x) 
             });
         }
     }
@@ -213,8 +298,8 @@ Player.prototype = Object.create(Actor.prototype);
 Player.prototype.constructor = Player;
 Player.prototype.init= function() {
     //Actor position (in tiles, not pixels)
-    this.tileX = world.playerStartTile.x;
-    this.tileY = world.playerStartTile.y;
+    this.tileX = world.tileMap.playerStartTile.x;
+    this.tileY = world.tileMap.playerStartTile.y;
 
     this.stepSizeX = world.tileSize.x; 
     this.stepSizeY = world.tileSize.y; 
@@ -237,7 +322,7 @@ Player.prototype.update = function(dt) {
         //Check for boundaries
         if (world.isTileWalkable(newTileX,newTileY)) { 
             //Check for win condition
-            if (newTileX >= 0 && newTileX < world.totalTiles.x){
+            if (newTileX >= 0 && newTileX < world.tileMap.totalTiles.x){
                 //Update position in tiles space
                 this.tileX = newTileX;
 
@@ -246,7 +331,7 @@ Player.prototype.update = function(dt) {
             }
 
             //Check for boundaries
-            if (newTileY >= 0 && newTileY < world.totalTiles.y){
+            if (newTileY >= 0 && newTileY < world.tileMap.totalTiles.y){
                 //Update position in tiles space
                 this.tileY = newTileY;
 
@@ -330,25 +415,8 @@ Enemy.prototype.update = function(dt) {
 //Main app code 
 //game variable is the main variable representing current game state 
 var game = new Game();
-
-//world variable is filled by the data in engine.js
-//and used by the entities;
-var world = new World();
-
-var allEnemies = [];
-for (var enemyIndex = 0; enemyIndex < game.numberOfEnemies ; enemyIndex++) {
-    allEnemies.push(new Enemy('images/enemy-bug.png'));
-}
-
-var player = new Player('images/char-boy.png');
-var princess = new Actor('images/char-princess-girl.png');
-var extras = []; 
-extras.push (new Actor('images/char-cat-girl.png'));
-extras.push (new Actor('images/char-pink-girl.png'));
-extras.push (new Actor('images/char-horn-girl.png'));
-extras.push (new Actor('images/Heart.png'));
-
-
+game.init(1,3,0);
+game.start();
 
 
 // This listens for key presses and sends the keys to your
