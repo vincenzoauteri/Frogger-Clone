@@ -16,40 +16,45 @@ var Game = function () {
 //Start new level
 Game.prototype.startLevel = function(reset) {
     if (reset) {
-        console.log('reset');
         this.level = 1;
         this.lives = 3;
         this.score = 0;
-
-        //Hide all extras
-        this.extras.forEach(function(extra) {
-            extra.draw = false;
-        });
     }
 
+    //Init World
     this.world.tileMap = this.world.maps[this.level-1];
-    this.running = 1;
-    //Enemies from previous level are reused, only new ones are added
-    for (var enemyIndex = this.allEnemies.length; enemyIndex < this.numberOfEnemies * this.level ; enemyIndex++) {
-        this.allEnemies.push(new Enemy('images/enemy-bug.png'));
+
+    //Init Enemies 
+    allEnemies = [];
+    var numberOfEnemiesInLevel = this.numberOfEnemies * this.level; 
+    for (var enemyIndex = this.allEnemies.length; enemyIndex < numberOfEnemiesInLevel ; enemyIndex++) {
+        var enemy = new Enemy('images/enemy-bug.png');
+        enemy.init(true); 
+        this.allEnemies.push(enemy);
     }
+
+    //Init Player 
     this.player.init();
-    this.allEnemies.forEach(function(enemy) {
-        enemy.init();
+
+    //Hide all extras
+    this.extras.forEach(function(extra) {
+        extra.draw = false;
     });
+
+    //Init Princess
     this.princess = this.extras[this.level - 1];
     this.princess.init(this.world.getTilesOfType('x')[0]);
+
+    this.running = 1;
 };
 
-Game.prototype.init = function(level, lives, score) {
+Game.prototype.init = function(pixelDimensions, tileSize) {
     //world variable is filled by the data in engine.js
     //and used by the entities;
     this.world = new World();
+    this.world.init(pixelDimensions, tileSize);
 
-    this.lives = lives;
-    this.level = level;
-    this.score = 0;
-    this.numberOfEnemies = 1; 
+    this.numberOfEnemies = 6; 
 
     //Enemies are spawned when the game is started.
     this.allEnemies = [];
@@ -61,6 +66,7 @@ Game.prototype.init = function(level, lives, score) {
     this.extras.push (new Actor('images/char-horn-girl.png'));
     this.extras.push (new Actor('images/char-princess-girl.png'));
     this.extras.push (new Actor('images/Heart.png'));
+    this.startLevel(true);
 };
 
 //Checks collision
@@ -70,8 +76,8 @@ Game.prototype.checkCollisions = function()  {
         //this game
         var collisionZone = 50;
         this.allEnemies.forEach(function(enemy) {
-            if ((Math.abs(enemy.x - game.player.x) < collisionZone) &&
-                (Math.abs(enemy.y - game.player.y) < collisionZone)) {
+            if ((Math.abs(enemy.x - this.player.x) < collisionZone) &&
+                (Math.abs(enemy.y - this.player.y) < collisionZone)) {
                     //Reduces lives by one
                     this.lives--;
                     //Resets player to staring position
