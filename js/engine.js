@@ -78,9 +78,10 @@ var Engine = (function(global) {
         var pixelDimensions = { width: canvas.width, height: canvas.height };
         var tileSize= { x: 101, y: 83 };
 
-        game.world.init(
+        game.init(
                 pixelDimensions,
                 tileSize);
+
 
         main();
     }
@@ -136,22 +137,10 @@ var Engine = (function(global) {
         ctx.fillStyle = 'white';
         ctx.fillRect(0,0,ctx.canvas.clientWidth,ctx.canvas.clientHeight);
 
-        var rowImages = [
-                'images/water-block.png',   // Top row is water
-                'images/stone-block.png',   // Row 1 of 3 of stone
-                'images/stone-block.png',   // Row 2 of 3 of stone
-                'images/stone-block.png',   // Row 3 of 3 of stone
-                'images/grass-block.png',   // Row 1 of 2 of grass
-                'images/grass-block.png'    // Row 2 of 2 of grass
-            ],
-            numRows = game.world.tileMap.totalTiles.y,
-            numCols = game.world.tileMap.totalTiles.x,
-            row, col;
+            var numRows = game.world.tileMap.totalTiles.y;
+            var numCols = game.world.tileMap.totalTiles.x;
+            var row, col;
 
-        /* Loop through the number of rows and columns we've defined above
-         * and, using the rowImages array, draw the correct image for that
-         * portion of the "grid"
-         */
         for (row = 0; row < numRows; row++) {
             for (col = 0; col < numCols; col++) {
                 /* The drawImage function of the canvas' context element
@@ -220,20 +209,27 @@ var Engine = (function(global) {
     //I'm saving the context properties and restore them once drawn,
     //to not mess up the rest of the render code for images 
     function renderTopBar() {
+       
         ctx.save();
         ctx.globalAlpha = 0.7; 
         ctx.font = '28px Impact'; 
         ctx.lineWidth = 1; 
         ctx.textAlign= 'start'; 
         ctx.strokeStyle = 'black'; 
-
+        if (game.running){ 
         //Using the alignment options to render part of the text to the left
         //and the second part to the right
-        var topBarTextLeft  = 'Level: ' + game.level + ' Lives: ' + game.lives ;
+        var topBarTextLeft=  'Score: ' + game.score;
         ctx.strokeText(topBarTextLeft, 10 , 40);
-        var topBarTextRight  =  'Score: ' + game.score;
+        var topBarTextRight = 'Level: ' + game.level + ' Lives: ' + game.lives ;
         ctx.textAlign= 'end'; 
         ctx.strokeText(topBarTextRight, canvas.width - 10, 40);
+        }else {
+        //Using the alignment options to render part of the text to the left
+        //and the second part to the right
+        var topBarTextLeft=  'Score: ' + game.score;
+        ctx.strokeText(topBarTextLeft, 10 , 40);
+        }
         ctx.restore();
     }
 

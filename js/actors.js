@@ -128,11 +128,18 @@ var Enemy = function(sprite, startX, startY) {
 Enemy.prototype = Object.create(Actor.prototype);
 Enemy.prototype.constructor = Enemy;
 
-Enemy.prototype.init = function() {
-   //Enemies are spawned at a random row, always one tile before the leftmost one 
+Enemy.prototype.init = function(startLevel) {
+   //Enemies are spawned at a random tile 
    var rows = game.world.enemyRows();
    var randomRow = rows[Math.floor(Math.random()*rows.length)];
-   this.x = -game.world.tileSize.x; 
+   var randomColumn = Math.floor(Math.random()*game.world.tileMap.totalTiles.x);
+   //If it's the first init we spawn in the middle, otherwise from the left side
+   //hidden
+   if (startLevel) {
+       this.x = game.world.tileSize.x*randomColumn; 
+   } else {
+       this.x = -game.world.tileSize.x;
+   }
    this.y = randomRow * game.world.tileSize.y - game.world.tileSize.y/2; 
    this.speed = 100 + Math.random()*200;
    this.draw = true;
@@ -157,7 +164,7 @@ Enemy.prototype.update = function(dt) {
         if (newX < game.world.sizeInPixels.width + game.world.tileSize.x) {
             this.x = newX;
         } else {
-            this.init() ;
+            this.init(0) ;
         }
     }
 }
