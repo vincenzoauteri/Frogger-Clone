@@ -1,10 +1,7 @@
 //Parent class for the actor entity, according to the pseudoclassical pattern.
 //Common between Player and Enemy, has a positon,
 //speed and render methods
-var Actor = function(sprite, startX, startY) {
-    //Starting coordinates for spawned actor 
-    this.x = startX;
-    this.y = startY;
+var Actor = function(sprite) {
     //Actor position (in tiles, not pixels)
     this.tileX = 0;
     this.tileY = 0;
@@ -15,6 +12,7 @@ var Actor = function(sprite, startX, startY) {
     //The image/sprite for the actor
     this.sprite = sprite;
 }
+
 // Init the actor with a tile Id
 Actor.prototype.init = function(tile) {
     this.tileX = tile.x;

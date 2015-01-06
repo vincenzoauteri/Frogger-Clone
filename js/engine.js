@@ -73,6 +73,15 @@ var Engine = (function(global) {
     function init() {
         reset();
         lastTime = Date.now();
+
+        //Init world variable used to draw the map and update entitites
+        var pixelDimensions = { width: canvas.width, height: canvas.height };
+        var tileSize= { x: 101, y: 83 };
+
+        game.world.init(
+                pixelDimensions,
+                tileSize);
+
         main();
     }
 
@@ -87,7 +96,7 @@ var Engine = (function(global) {
      */
     function update(dt) {
         updateEntities(dt);
-        if (game.world.checkVictory()) {
+        if (game.checkVictory() || game.checkDefeat()) {
             reset();
         }
         game.checkCollisions();
@@ -203,22 +212,9 @@ var Engine = (function(global) {
      * those sorts of things. It's only called once by the init() method.
      */
     function reset() {
-        //Init world variable used to draw the map and update entitites
-        var pixelDimensions = { width: canvas.width, height: canvas.height };
-        var tileSize= { x: 101, y: 83 };
 
-        game.world.init(
-                pixelDimensions,
-                tileSize);
-
-        canvas.width = 101 * game.world.tileMap.totalTiles.x;
-        canvas.height= 101 * game.world.tileMap.totalTiles.y;
-
-        game.player.init();
-        game.princess.init(game.world.getTilesOfType('x')[0]);
-        game.allEnemies.forEach(function(enemy) {
-            enemy.init();
-        });
+        canvas.width  = 101 * game.world.tileMap.totalTiles.x;
+        canvas.height = 101 * game.world.tileMap.totalTiles.y;
     }
     //Drawing the topbar
     //I'm saving the context properties and restore them once drawn,
