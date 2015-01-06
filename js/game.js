@@ -25,13 +25,14 @@ Game.prototype.startLevel = function(reset) {
     this.world.tileMap = this.world.maps[this.level-1];
 
     //Init Enemies 
-    allEnemies = [];
+    this.allEnemies = [];
     var numberOfEnemiesInLevel = this.numberOfEnemies * this.level; 
     for (var enemyIndex = this.allEnemies.length; enemyIndex < numberOfEnemiesInLevel ; enemyIndex++) {
         var enemy = new Enemy('images/enemy-bug.png');
         enemy.init(true); 
         this.allEnemies.push(enemy);
     }
+    console.log(this.allEnemies);
 
     //Init Player 
     this.player.init();
