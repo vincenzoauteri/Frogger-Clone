@@ -123,33 +123,9 @@ var World = function() {
     this.enemyTiles= ['s'];
 };
 
-World.prototype.checkVictory = function()  {
-    if (game.running === 1) { 
-        var collisionZone = 50;
-        if ((Math.abs(game.princess.x - game.player.x) < collisionZone) &&
-                (Math.abs(game.princess.y - game.player.y) < collisionZone)) {
-                    console.log(game.level);
-                    game.level++;
-                    if (game.level <= game.world.maps.length) {
-                        game.princess.draw = false;
-                        game.score += 1000;
-                        game.startLevel(false);
-                        return true;
-                    } else {
-                        game.victorySequence();
-                    }
-                }
-    
-    }
-    return false;
-}
-
-
 World.prototype.init = function(sizeInPixels, tileSize) {
-    console.log(this);
     this.sizeInPixels = sizeInPixels;
     this.tileSize = tileSize;
-    console.log(this);
 }
 
 //Check if player can walk on tile, in which case the tile type is listed

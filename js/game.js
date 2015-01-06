@@ -13,11 +13,18 @@ var Game = function () {
     this.extras = {};
 };
 
+//Start new level
 Game.prototype.startLevel = function(reset) {
     if (reset) {
+        console.log('reset');
         this.level = 1;
         this.lives = 3;
         this.score = 0;
+
+        //Hide all extras
+        this.extras.forEach(function(extra) {
+            extra.draw = false;
+        });
     }
 
     this.world.tileMap = this.world.maps[this.level-1];
@@ -26,7 +33,12 @@ Game.prototype.startLevel = function(reset) {
     for (var enemyIndex = this.allEnemies.length; enemyIndex < this.numberOfEnemies * this.level ; enemyIndex++) {
         this.allEnemies.push(new Enemy('images/enemy-bug.png'));
     }
+    this.player.init();
+    this.allEnemies.forEach(function(enemy) {
+        enemy.init();
+    });
     this.princess = this.extras[this.level - 1];
+    this.princess.init(this.world.getTilesOfType('x')[0]);
 };
 
 Game.prototype.init = function(level, lives, score) {
@@ -36,6 +48,7 @@ Game.prototype.init = function(level, lives, score) {
 
     this.lives = lives;
     this.level = level;
+    this.score = 0;
     this.numberOfEnemies = 1; 
 
     //Enemies are spawned when the game is started.
@@ -50,6 +63,7 @@ Game.prototype.init = function(level, lives, score) {
     this.extras.push (new Actor('images/Heart.png'));
 };
 
+//Checks collision
 Game.prototype.checkCollisions = function()  {
     if (this.running === 1) { 
         //Collision boundary. Not really precise, but will do for 
@@ -58,19 +72,54 @@ Game.prototype.checkCollisions = function()  {
         this.allEnemies.forEach(function(enemy) {
             if ((Math.abs(enemy.x - game.player.x) < collisionZone) &&
                 (Math.abs(enemy.y - game.player.y) < collisionZone)) {
+                    //Reduces lives by one
                     this.lives--;
-                    if (this.lives === 0) {
-                        game.startLevel(true);
-                    }
+                    //Resets player to staring position
                     this.player.tileX = this.world.tileMap.playerStartTile.x;
                     this.player.tileY = this.world.tileMap.playerStartTile.y;
                 }
         },this);
     }
+    return false; 
 }
 
+//checks for winning conditions
+Game.prototype.checkVictory = function()  {
+    if (this.running === 1) { 
+        var collisionZone = 50;
+        if ((Math.abs(this.princess.x - this.player.x) < collisionZone) &&
+                (Math.abs(this.princess.y - this.player.y) < collisionZone)) {
+                    this.level++;
+                    this.score += 1000;
+                    if (this.level <= this.world.maps.length) {
+                        //Next level
+                        this.princess.draw = false;
+                        this.startLevel(false);
+                        return true;
+                    } else {
+                        //Game won!
+                        this.victorySequence();
+                    }
+                }
+    
+    }
+    return false;
+}
+
+//checks for losing conditions
+Game.prototype.checkDefeat = function()  {
+    var result = false;
+    if (this.lives === 0) {
+        this.startLevel(true);
+        result = true;
+    }
+    return result;
+}
+
+
+
+//End sequence. Not very flexible, but it's one-off
 Game.prototype.victorySequence = function() {
-    //End sequence. Not very flexible, but it's one-off
     this.running = 0;
     this.world.tileMap = this.world.victoryMap; 
     //Characters will be placed on the grass tiles of victoryMap
