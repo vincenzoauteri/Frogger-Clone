@@ -1,8 +1,13 @@
 //Main app code 
-//game variable is the main variable representing current game state 
-game = new Game();
- 
 
+//Architecture overwiew: the main class (using pseudoclassical pattern) is Game
+//Game has a World (defining map topology) a Player, an array of Enemy(s) and a 
+//princess which is an instance of the general class Actor for the characters
+//of which Player and Enemy are subclasses
+//
+//Game holds the logic for checking collisions and victory/defeat conditions
+//The only variable in the global scope is game
+game = new Game();
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
@@ -14,5 +19,8 @@ document.addEventListener('keyup', function(e) {
         40: 'down'
     };
 
-    game.player.handleInput(allowedKeys[e.keyCode]);
+    if (game.running) {
+        game.player.handleInput(allowedKeys[e.keyCode]);
+    }
+
 });
