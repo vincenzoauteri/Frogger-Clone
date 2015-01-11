@@ -9,11 +9,14 @@ var World = function() {
         x: 0,
         y: 0
     };
+
     //World representation, as an array of Tiles
     //'w' for water
     //'s' for stone
     //'g' for grass
     //'x' for goal 
+    //
+    //Final Scene
     this.victoryMap =  
     {
         totalTiles: {
@@ -30,8 +33,10 @@ var World = function() {
         ]
     };
 
+    //Array of levels
     this.maps= [
     { 
+        //Level 1
         totalTiles :{
             x: 5,
             y: 6
@@ -50,6 +55,7 @@ var World = function() {
         ] 
     }, 
     {
+        //Level 2
         totalTiles: {
             x: 5,
             y: 8
@@ -70,6 +76,7 @@ var World = function() {
         ]
     },
     {
+        //Level 3
         totalTiles: {
             x: 7,
             y: 10 
@@ -92,6 +99,7 @@ var World = function() {
         ]
     },
     {
+        //Level 4
         totalTiles: {
             x: 7,
             y: 12 
@@ -116,25 +124,31 @@ var World = function() {
         ]
     }
     ];
-    //This is the map used for the current Game
+
+    //This is the map used for the current level  
+    //Will be assigned to one of the levels in the array
     this.tileMap = {};
+
     //Tiles on which the player can walk
     this.walkableTiles = ['g','s','x'];
+
     //Tiles on which the enemy can be spawned 
     this.enemyTiles= ['s'];
 };
 
 World.prototype.init = function(sizeInPixels, tileSize) {
-    this.sizeInPixels = sizeInPixels;
-    this.tileSize = tileSize;
+    this.sizeInPixels.width = sizeInPixels.width;
+    this.sizeInPixels.height = sizeInPixels.height;
+    this.tileSize.x = tileSize.x;
+    this.tileSize.y = tileSize.y;
 }
 
 //Check if player can walk on tile, in which case the tile type is listed
 //in the array walkableTiles
-World.prototype.isTileWalkable = function(tileX, tileY) {
+World.prototype.isTileWalkable = function(tile) {
     var result = false;
     
-    var tileType = this.tileMap.map[tileX + tileY*this.tileMap.totalTiles.x];
+    var tileType = this.tileMap.map[tile.x + tile.y*this.tileMap.totalTiles.x];
 
     if (tileType &&  (this.walkableTiles.indexOf(tileType) > -1)){
         //If tile exists and it is walkable returns true

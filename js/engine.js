@@ -33,7 +33,6 @@ var Engine = (function(global) {
 
     //Variable used to store map dimensions, to be passed to entities
     //for boundaries checking
-
     doc.body.appendChild(canvas);
 
     /* This function serves as the kickoff point for the game loop itself
@@ -75,7 +74,7 @@ var Engine = (function(global) {
 
         //Init world variable used to draw the map and update entitites
         var pixelDimensions = { width: canvas.width, height: canvas.height };
-        var tileSize= { x: 101, y: 83 };
+        var tileSize = { x: 101, y: 83 };
 
         //game is the global instance of the Game class declared in app.js
         game.init(pixelDimensions, tileSize);
@@ -95,10 +94,12 @@ var Engine = (function(global) {
      */
     function update(dt) {
         updateEntities(dt);
+
+        game.checkCollisions();
+
         if (game.checkVictory() || game.checkDefeat()) {
             reset();
         }
-        game.checkCollisions();
     }
 
     /* 
@@ -112,14 +113,17 @@ var Engine = (function(global) {
      * render methods.
      */
     function updateEntities(dt) {
-        game.allEnemies.forEach(function( enemy) {
+        //Our entities are the player, enemies, the princess and the extras
+        game.player.update(dt, game.world);
+
+        game.allEnemies.forEach(function(enemy) {
             enemy.update(dt, game.world);
         });
+
+        game.princess.update(game.world);
         game.extras.forEach(function(extra) {
             extra.update(game.world);
         });
-        game.player.update(dt, game.world);
-        game.princess.update(game.world);
     }
 
     /* This function initially draws the "game level", it will then call
@@ -135,19 +139,12 @@ var Engine = (function(global) {
         ctx.fillStyle = 'white';
         ctx.fillRect(0,0,ctx.canvas.clientWidth,ctx.canvas.clientHeight);
 
-            var numRows = game.world.tileMap.totalTiles.y;
-            var numCols = game.world.tileMap.totalTiles.x;
-            var row, col;
+        var numRows = game.world.tileMap.totalTiles.y;
+        var numCols = game.world.tileMap.totalTiles.x;
+        var row, col;
 
         for (row = 0; row < numRows; row++) {
             for (col = 0; col < numCols; col++) {
-                /* The drawImage function of the canvas' context element
-                 * requires 3 parameters: the image to draw, the x coordinate
-                 * to start drawing and the y coordinate to start drawing.
-                 * We're using our Resources helpers to refer to our images
-                 * so that we get the benefits of caching these images, since
-                 * we're using them over and over.
-                 */
                 // Modified so that it reads the tileMap array in world.
                 var resource;
                 switch (game.world.tileMap.map[col + numCols*row])   {
@@ -194,14 +191,16 @@ var Engine = (function(global) {
         game.princess.render();
     }
 
-    /* This function does nothing but it could have been a good place to
-     * handle game reset states - maybe a new game menu or a game over screen
-     * those sorts of things. It's only called once by the init() method.
-     */
+    //Called upon level change
     function reset() {
 
+        //Updates canvas size depending on world size
         canvas.width  = 101 * game.world.tileMap.totalTiles.x;
         canvas.height = 101 * game.world.tileMap.totalTiles.y;
+        var pixelDimensions = { width: canvas.width, height: canvas.height };
+        game.world.sizeInPixels.width = pixelDimensions.width;
+        game.world.sizeInPixels.height = pixelDimensions.height;
+
     }
     //Drawing the topbar
     //I'm saving the context properties and restore them once drawn,
@@ -214,12 +213,12 @@ var Engine = (function(global) {
         ctx.lineWidth = 1; 
         ctx.textAlign= 'start'; 
         ctx.strokeStyle = 'black'; 
-        if (running){ 
+        if (game.running){ 
         //Using the alignment options to render part of the text to the left
         //and the second part to the right
         var topBarTextLeft=  'Score: ' + game.score;
         ctx.strokeText(topBarTextLeft, 10 , 40);
-        var topBarTextRight = 'Level: ' + game.level + ' Lives: ' + game.lives ;
+        var topBarTextRight = 'Level: ' + game.level + ' Lives: ' + game.player.lives ;
         ctx.textAlign= 'end'; 
         ctx.strokeText(topBarTextRight, canvas.width - 10, 40);
         }else {
