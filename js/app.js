@@ -1,8 +1,7 @@
 //Main app code 
 //game variable is the main variable representing current game state 
-var game = new Game();
-game.init(1,3,0);
-game.startLevel();
+game = new Game();
+ 
 
 
 // This listens for key presses and sends the keys to your

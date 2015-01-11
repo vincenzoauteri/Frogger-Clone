@@ -4,6 +4,7 @@ var World = function() {
         width: 0,
         height: 0
     }
+    //Tile size in pixels. Depends on the bitmaps, defined on init 
     this.tileSize= {
         x: 0,
         y: 0
@@ -115,7 +116,7 @@ var World = function() {
         ]
     }
     ];
-    //This is the map used for the current game
+    //This is the map used for the current Game
     this.tileMap = {};
     //Tiles on which the player can walk
     this.walkableTiles = ['g','s','x'];
