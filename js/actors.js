@@ -28,9 +28,9 @@ Actor.prototype.render = function() {
 }
 
 // Draw the actor on the screen
-Actor.prototype.update= function() {
-    this.x = this.tileX * game.world.tileSize.x;
-    this.y = this.tileY * game.world.tileSize.y - game.world.tileSize.y/2;
+Actor.prototype.update= function(world) {
+    this.x = this.tileX * world.tileSize.x;
+    this.y = this.tileY * world.tileSize.y - world.tileSize.y/2;
 }
 
 // Player variable, subclass of actor 
@@ -43,22 +43,22 @@ var Player = function(sprite) {
     this.stepSizeX = 0; 
 }
 Player.prototype = Object.create(Actor.prototype);
-// Update the enemy's position, required method for game
+// Update the enemy's position, required method for Game
 // Parameter: dt, a time delta between ticks
 Player.prototype.constructor = Player;
-Player.prototype.init= function() {
+Player.prototype.init= function(world) {
     //Actor position (in tiles, not pixels)
-    this.tileX = game.world.tileMap.playerStartTile.x;
-    this.tileY = game.world.tileMap.playerStartTile.y;
+    this.tileX = world.tileMap.playerStartTile.x;
+    this.tileY = world.tileMap.playerStartTile.y;
 
-    this.stepSizeX = game.world.tileSize.x; 
-    this.stepSizeY = game.world.tileSize.y; 
+    this.stepSizeX = world.tileSize.x; 
+    this.stepSizeY = world.tileSize.y; 
     this.draw = true;
 };
 
-Player.prototype.update = function(dt) {
+Player.prototype.update = function(dt, world) {
     // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
+    // which will ensure the Game runs at the same speed for
     // all computers.
 
     //Player moves 1 tile at a time
@@ -70,9 +70,9 @@ Player.prototype.update = function(dt) {
         var newTileY = this.tileY + this.stepY;
 
         //Check for boundaries
-        if (game.world.isTileWalkable(newTileX,newTileY)) { 
+        if (world.isTileWalkable(newTileX,newTileY)) { 
             //Check for win condition
-            if (newTileX >= 0 && newTileX < game.world.tileMap.totalTiles.x){
+            if (newTileX >= 0 && newTileX < world.tileMap.totalTiles.x){
                 //Update position in tiles space
                 this.tileX = newTileX;
 
@@ -81,14 +81,14 @@ Player.prototype.update = function(dt) {
             }
 
             //Check for boundaries
-            if (newTileY >= 0 && newTileY < game.world.tileMap.totalTiles.y){
+            if (newTileY >= 0 && newTileY < world.tileMap.totalTiles.y){
                 //Update position in tiles space
                 this.tileY = newTileY;
 
                 //Update position in world space
                 this.y = (this.tileY - 1)* this.stepSizeY;
                 //Center player on the tile
-                this.y += game.world.tileSize.y/2;
+                this.y += world.tileSize.y/2;
             }
         }
 
@@ -128,27 +128,27 @@ var Enemy = function(sprite, startX, startY) {
 Enemy.prototype = Object.create(Actor.prototype);
 Enemy.prototype.constructor = Enemy;
 
-Enemy.prototype.init = function(startLevel) {
+Enemy.prototype.init = function(startLevel, world) {
    //Enemies are spawned at a random tile 
-   var rows = game.world.enemyRows();
+   var rows = world.enemyRows();
    var randomRow = rows[Math.floor(Math.random()*rows.length)];
-   var randomColumn = Math.floor(Math.random()*game.world.tileMap.totalTiles.x);
+   var randomColumn = Math.floor(Math.random()*world.tileMap.totalTiles.x);
    //If it's the first init we spawn in the middle, otherwise from the left side
    //hidden
    if (startLevel) {
-       this.x = game.world.tileSize.x*randomColumn; 
+       this.x = world.tileSize.x*randomColumn; 
    } else {
-       this.x = -game.world.tileSize.x;
+       this.x = -world.tileSize.x;
    }
-   this.y = randomRow * game.world.tileSize.y - game.world.tileSize.y/2; 
+   this.y = randomRow * world.tileSize.y - world.tileSize.y/2; 
    this.speed = 100 + Math.random()*200;
    this.draw = true;
 }
-// Update the enemy's position, required method for game
+// Update the enemy's position, required method for Game
 // Parameter: dt, a time delta between ticks
-Enemy.prototype.update = function(dt) {
+Enemy.prototype.update = function(dt, world) {
     // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
+    // which will ensure the Game runs at the same speed for
     // all computers.
 
     if (this.draw) {
@@ -160,11 +160,11 @@ Enemy.prototype.update = function(dt) {
         //When the enemy reaches the border it respawns at the beginning 
 
         //Enemies are not created and destroyed, they are reused for the duration
-        //of the game
-        if (newX < game.world.sizeInPixels.width + game.world.tileSize.x) {
+        //of the Game
+        if (newX < world.sizeInPixels.width + world.tileSize.x) {
             this.x = newX;
         } else {
-            this.init(0) ;
+            this.init(0, world) ;
         }
     }
 }

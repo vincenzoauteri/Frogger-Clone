@@ -1,19 +1,27 @@
 //Class Game. Stores game related information
 //Lives, level, number of enemies...
 //
-var Game = function () {
-    this.lives = 0;
-    this.level = 0;
-    this.numberOfEnemies = 0; 
-    this.running = 0;
-    this.world = {};
-    this.player= {};
-    this.allEnemies= {};
-    this.princess = {};
-    this.extras = {};
+var Game = function (){
+    //Number of lives - decreares when hit by a bug
+    this.lives = 3;
+    //Level number - depends on the number of maps in the world variable 
+    this.level = 1;
+    //Number of enemies constant number of spawned enemies
+    this.numberOfEnemies = 7 ; 
+    //Variable that records the runing state of the game
+    this.running  = false ;
+    //Variable that holds an object of class world. Will be overridden on init 
+    this.world  = function() {} ;
+    //Variable that holds an object of class Player. Will be overridden on init 
+    this.player  = function() {} ;
+    //Variable that holds an array of Enemy objects. Will be filled on init 
+    this.allEnemies  = [];
+    //Variable that holds an Actor object, that serves as the goal for the level 
+    this.princess  = 0,
+    //Variable that holds an array of Actors, hold all the character bitmaps 
+    this.extras  = [];
 };
 
-//Start new level
 Game.prototype.startLevel = function(reset) {
     if (reset) {
         this.level = 1;
@@ -22,20 +30,18 @@ Game.prototype.startLevel = function(reset) {
     }
 
     //Init World
-    this.world.tileMap = this.world.maps[this.level-1];
-
-    //Init Enemies 
+    this.world.tileMap = this.world.maps[this.level-1]; 
+    //Init Enemies. 
     this.allEnemies = [];
     var numberOfEnemiesInLevel = this.numberOfEnemies * this.level; 
     for (var enemyIndex = this.allEnemies.length; enemyIndex < numberOfEnemiesInLevel ; enemyIndex++) {
         var enemy = new Enemy('images/enemy-bug.png');
-        enemy.init(true); 
+        enemy.init(true, this.world); 
         this.allEnemies.push(enemy);
     }
-    console.log(this.allEnemies);
 
     //Init Player 
-    this.player.init();
+    this.player.init(this.world);
 
     //Hide all extras
     this.extras.forEach(function(extra) {
@@ -46,15 +52,16 @@ Game.prototype.startLevel = function(reset) {
     this.princess = this.extras[this.level - 1];
     this.princess.init(this.world.getTilesOfType('x')[0]);
 
-    this.running = 1;
+    running = 1;
 };
 
 Game.prototype.init = function(pixelDimensions, tileSize) {
-    //world variable is filled by the data in engine.js
+    //World variable is filled by the data in engine.js
     //and used by the entities;
     this.world = new World();
     this.world.init(pixelDimensions, tileSize);
 
+    //Constant. Could be changed if difficulty level is introduced
     this.numberOfEnemies = 6; 
 
     //Enemies are spawned when the game is started.
@@ -70,11 +77,13 @@ Game.prototype.init = function(pixelDimensions, tileSize) {
     this.startLevel(true);
 };
 
+
+
 //Checks collision
 Game.prototype.checkCollisions = function()  {
-    if (this.running === 1) { 
+    if (running === 1) { 
         //Collision boundary. Not really precise, but will do for 
-        //this game
+        //game
         var collisionZone = 50;
         this.allEnemies.forEach(function(enemy) {
             if ((Math.abs(enemy.x - this.player.x) < collisionZone) &&
@@ -85,14 +94,14 @@ Game.prototype.checkCollisions = function()  {
                     this.player.tileX = this.world.tileMap.playerStartTile.x;
                     this.player.tileY = this.world.tileMap.playerStartTile.y;
                 }
-        },this);
+        }, this);
     }
     return false; 
 }
 
-//checks for winning conditions
+//checks for winning conditions (collision with goal)
 Game.prototype.checkVictory = function()  {
-    if (this.running === 1) { 
+    if (running === 1) { 
         var collisionZone = 50;
         if ((Math.abs(this.princess.x - this.player.x) < collisionZone) &&
                 (Math.abs(this.princess.y - this.player.y) < collisionZone)) {
@@ -113,7 +122,7 @@ Game.prototype.checkVictory = function()  {
     return false;
 }
 
-//checks for losing conditions
+//checks for losing conditions (lives === 0)
 Game.prototype.checkDefeat = function()  {
     var result = false;
     if (this.lives === 0) {
@@ -130,7 +139,7 @@ Game.prototype.victorySequence = function() {
     this.running = 0;
     this.world.tileMap = this.world.victoryMap; 
     //Characters will be placed on the grass tiles of victoryMap
-    var endTiles = this.world.getTilesOfType('g');
+    var endTiles = world.getTilesOfType('g');
     this.player.tileX = endTiles[0].x; 
     this.player.tileY = endTiles[0].y; 
     this.extras[0].init(endTiles[3]);

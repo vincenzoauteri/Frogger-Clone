@@ -71,20 +71,18 @@ var Engine = (function(global) {
      * game loop.
      */
     function init() {
-        reset();
         lastTime = Date.now();
 
         //Init world variable used to draw the map and update entitites
         var pixelDimensions = { width: canvas.width, height: canvas.height };
         var tileSize= { x: 101, y: 83 };
 
-        game.init(
-                pixelDimensions,
-                tileSize);
+        //game is the global instance of the Game class declared in app.js
+        game.init(pixelDimensions, tileSize);
 
-
+        reset();
         main();
-    }
+     }
 
     /* This function is called by main (our game loop) and itself calls all
      * of the functions which may need to update entity's data. Based on how
@@ -114,14 +112,14 @@ var Engine = (function(global) {
      * render methods.
      */
     function updateEntities(dt) {
-        game.allEnemies.forEach(function(enemy) {
-            enemy.update(dt);
+        game.allEnemies.forEach(function( enemy) {
+            enemy.update(dt, game.world);
         });
         game.extras.forEach(function(extra) {
-            extra.update();
+            extra.update(game.world);
         });
-        game.player.update(dt);
-        game.princess.update();
+        game.player.update(dt, game.world);
+        game.princess.update(game.world);
     }
 
     /* This function initially draws the "game level", it will then call
@@ -216,7 +214,7 @@ var Engine = (function(global) {
         ctx.lineWidth = 1; 
         ctx.textAlign= 'start'; 
         ctx.strokeStyle = 'black'; 
-        if (game.running){ 
+        if (running){ 
         //Using the alignment options to render part of the text to the left
         //and the second part to the right
         var topBarTextLeft=  'Score: ' + game.score;
