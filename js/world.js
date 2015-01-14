@@ -1,3 +1,10 @@
+/* 
+    Defines variables and methods that define the levels
+    - Defines tile map for the specific levels
+    - Defines princess and player position for the levels
+    - Provide information about the level to the other classes.
+*/
+
 var World = function() {
     //Size of the world map (in pixels)
     this.sizeInPixels = {
@@ -136,6 +143,10 @@ var World = function() {
     this.enemyTiles= ['s'];
 };
 
+/* 
+    Init function for the level. Called when a new level is loaded.
+    Sets the total size of the map, depending on tile size
+*/
 World.prototype.init = function(sizeInPixels, tileSize) {
     this.sizeInPixels.width = sizeInPixels.width;
     this.sizeInPixels.height = sizeInPixels.height;
@@ -143,11 +154,14 @@ World.prototype.init = function(sizeInPixels, tileSize) {
     this.tileSize.y = tileSize.y;
 }
 
-//Check if player can walk on tile, in which case the tile type is listed
-//in the array walkableTiles
+/*
+    Check if player can walk on tile, in which case the tile type is listed
+    in the array walkableTiles
+*/
 World.prototype.isTileWalkable = function(tile) {
     var result = false;
-    
+    //Tiles are stored in a one dimensional array, we need to consider the number of rows 
+    //when accessing a specific tile
     var tileType = this.tileMap.map[tile.x + tile.y*this.tileMap.totalTiles.x];
 
     if (tileType &&  (this.walkableTiles.indexOf(tileType) > -1)){
@@ -157,8 +171,9 @@ World.prototype.isTileWalkable = function(tile) {
     return result; 
 }
 
-
-//Returns an array with the indexes of the rows on which enemies can be spawned
+/*
+   Returns an array with the rows index on which enemies will spawn
+*/
 World.prototype.enemyRows= function() {
     var result = [];
     for (var rowIndex = 0; rowIndex < this.tileMap.totalTiles.y; rowIndex++){
@@ -171,7 +186,10 @@ World.prototype.enemyRows= function() {
     }
     return result;
 }
-//Returns an array with the tiles coordinates of a specific type
+
+/*
+    Returns an array with the tiles coordinates of a specific type of tyle
+*/
 World.prototype.getTilesOfType= function(type) {
     var result = []; 
     for (var tileMapIndex = 0; tileMapIndex < this.tileMap.map.length; tileMapIndex ++) {
