@@ -1,6 +1,8 @@
-//Class Game. Stores game related information
-//Level, number of enemies...
-//
+/*
+    Class Game. Stores game related information
+    Level, number of enemies...
+    Also manages collision detection, and init new nevel
+*/
 var Game = function (){
     //Level number - depends on the number of maps in the world variable 
     this.level = 1;
@@ -20,7 +22,10 @@ var Game = function (){
     this.extras  = [];
 };
 
-//Called at the start of a new level
+/* 
+    Called at the start of a new level
+    Inits the world and entities to their starting state for each level
+*/
 Game.prototype.startLevel = function(reset) {
     //If player died, resets the game to level 1
     if (reset) {
@@ -29,9 +34,9 @@ Game.prototype.startLevel = function(reset) {
         this.player.lives = 3;
     }
 
-    //Init World
+    //Init World, depending on level number
     this.world.tileMap = this.world.maps[this.level-1]; 
-    //Init Enemies. 
+    //Init Enemies, their number changes depending on the level.
     this.allEnemies = [];
     var numberOfEnemiesInLevel = this.numberOfEnemies * this.level; 
     for (var enemyIndex = this.allEnemies.length; enemyIndex < numberOfEnemiesInLevel ; enemyIndex++) {
@@ -55,6 +60,10 @@ Game.prototype.startLevel = function(reset) {
     this.running = true; 
 };
 
+/* 
+    Init function for the Game object. Called only at the start of the game
+    Loads resources, and starts the first level
+*/
 Game.prototype.init = function(pixelDimensions, tileSize) {
     //World variable is filled by the data in engine.js
     //and used by the entities;
@@ -84,11 +93,14 @@ Game.prototype.init = function(pixelDimensions, tileSize) {
     this.startLevel(true);
 };
 
-//Checks collision between two Actors 
+/* 
+    Collision detection. Due to inheritance, it will work with Actor objects, Player objects
+    and Enemy objects
+*/
 Game.prototype.checkCollisionBetween = function(actor1, actor2)  {
     var result = false;
-    //Collision boundary. Not really precise, but will do for 
-    //game
+    //Collision boundary. Not really precise, but will do for the game
+    //Square of 50 pixels.
     var collisionZone = 50;
     if ((Math.abs(actor1.position.x - actor2.position.x) < collisionZone) &&
             (Math.abs(actor1.position.y - actor2.position.y) < collisionZone)) {
@@ -97,7 +109,10 @@ Game.prototype.checkCollisionBetween = function(actor1, actor2)  {
     return result;
 }
 
-//Checks collision between player and enemies
+/* 
+    Checks collision between player and enemies. Uses the generic collision detection 
+    function defined above.
+*/
 Game.prototype.checkCollisions = function()  {
     if (this.running === true) { 
         this.allEnemies.forEach(function(enemy) {
@@ -113,7 +128,10 @@ Game.prototype.checkCollisions = function()  {
     }
 }
 
-//checks for winning conditions (collision with goal)
+/* 
+    Checks collision between player and princess. Uses the generic collision detection 
+    function defined above.
+*/
 Game.prototype.checkVictory = function()  {
     if (this.running === true) { 
             if (this.checkCollisionBetween(this.player,this.princess)) {
@@ -133,7 +151,9 @@ Game.prototype.checkVictory = function()  {
     return false;
 }
 
-//checks for losing conditions (player lives === 0)
+/* 
+    Checks for player lives number, resets game when 0
+*/
 Game.prototype.checkDefeat = function()  {
     var result = false;
     if (this.player.lives <= 0) {
@@ -143,7 +163,10 @@ Game.prototype.checkDefeat = function()  {
     return result;
 }
 
-//End sequence. Not very flexible, but it's one-off
+/* 
+    End sequence, loads a specific map (non interactive)
+    Places the player and the extras in grass tiles on this map for the final scene
+*/
 Game.prototype.victorySequence = function() {
     this.running = false;
     //Loads dedicated map
