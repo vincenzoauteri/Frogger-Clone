@@ -1,6 +1,8 @@
-/* Parent class for the Actor entity, according to the pseudoclassical pattern.
+/* 
+   Parent class for the Actor entity, according to the pseudoclassical pattern.
    Parent class of Player and Enemy, has a positon,
-   speed and render methods */
+   speed and render methods 
+*/
   
 var Actor = function(sprite) {
     //Actor position (in pixels coordinate space)
@@ -22,31 +24,39 @@ var Actor = function(sprite) {
     this.sprite = sprite;
 }
 
-/* Init function for the Actor entity */
+/* 
+   Init function for the Actor entity 
+*/
 Actor.prototype.init = function(tile) {
     this.tile.x = tile.x;
     this.tile.y = tile.y;
     this.draw = true;
 }
 
-/* Draws the Actor on screen */
+/* 
+   Draws the Actor on screen 
+*/
 Actor.prototype.render = function() {
     if (this.draw) {
         ctx.drawImage(Resources.get(this.sprite), this.position.x, this.position.y);
     }
 }
 
-/* Updates the Actor position in the world */
+/* 
+   Updates the Actor position in the world 
+*/
 Actor.prototype.update = function(world) {
     this.position.x = this.tile.x * world.tileSize.x;
     //Centers the sprite on the tile for the y axis
     this.position.y = this.tile.y * world.tileSize.y - world.tileSize.y/2;
 }
 
-/* Player entity, subclass of Actor 
+/* 
+   Player entity, subclass of Actor 
    Manages the player character sprite in the world.
    Shares render method but overrides init
-   and update functions */
+   and update functions 
+*/
 var Player = function(sprite) {
     Actor.call(this, sprite);
     //Actor movement step(in tiles, not pixels)
@@ -62,13 +72,15 @@ var Player = function(sprite) {
         y: 0
     };
 }
-//Sublclassing to Actor according to pseudoclassical pattern
+//Subclassing to Actor according to pseudoclassical pattern
 Player.prototype = Object.create(Actor.prototype);
 Player.prototype.constructor = Player;
 
-/* Player initialization
+/* 
+   Player initialization
     -Resets number of lives
-    -Set step size depending on tile size */
+    -Set step size depending on tile size
+*/
 Player.prototype.init = function(world) {
     //Player lives
     this.lives = 3;
@@ -79,11 +91,12 @@ Player.prototype.init = function(world) {
     this.draw = true;
 };
 
-/* Player update function
+/* 
+   Player update function
    Keyboard input sets the step variable,
    and this function updates the player characters coordinates
-   according to the new value */
- 
+   according to the new value 
+*/
 Player.prototype.update = function(dt, world) {
     //Player moves 1 tile at a time, calculates new coordinates in tiles space
     if (this.draw) {
@@ -119,14 +132,18 @@ Player.prototype.update = function(dt, world) {
     this.step.y = 0;
 }
 
-/* Resets player at the start tile in the map */
+/* 
+   Resets player at the start tile in the map 
+*/
 Player.prototype.resetsPosition= function(world) {
     //Starting tile depends on the world map
     this.tile.x = world.tileMap.playerStartTile.x;
     this.tile.y = world.tileMap.playerStartTile.y;
 }
 
-/* Updates player step depending on input */
+/* 
+   Updates player step depending on input 
+*/
 Player.prototype.handleInput= function(keyPressed) {
     //Callback for keyboard input. Updates the player current step used in the update method
     switch (keyPressed) {
@@ -145,10 +162,12 @@ Player.prototype.handleInput= function(keyPressed) {
     }
 }
 
-/* Enemy entity, subclass of Actor 
+/* 
+   Enemy entity, subclass of Actor 
    Manages the bugs running around the world.
    Shares render method but overrides init
-   and update functions */
+   and update functions 
+*/
 var Enemy = function(sprite) {
     Actor.call(this, sprite);
     //Actor's speed.
@@ -158,8 +177,10 @@ var Enemy = function(sprite) {
 Enemy.prototype = Object.create(Actor.prototype);
 Enemy.prototype.constructor = Enemy;
 
-/* Enemy initialization 
-   Enemies are spawned on random rows and tiles at the start of the level */
+/* 
+   Enemy initialization 
+   Enemies are spawned on random rows and tiles at the start of the level 
+*/
 Enemy.prototype.init = function(startLevel, world) {
    //Enemies are spawned at a random row 
    var rows = world.enemyRows();
@@ -177,8 +198,10 @@ Enemy.prototype.init = function(startLevel, world) {
    this.draw = true;
 }
 
-/* Update the enemy's position, required method by the engine
-    Parameter: dt, a time delta between ticks */
+/* 
+   Update the enemy's position, required method by the engine
+    Parameter: dt, a time delta between ticks 
+*/
 Enemy.prototype.update = function(dt, world) {
     if (this.draw) {
         // Enemy moves horizontally by pixels, not by tiles like the player
