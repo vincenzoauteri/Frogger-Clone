@@ -16,7 +16,8 @@
     - actor.js: defines the generic Actor class for representing characters, and the subclasses
         Player and Enemy that are specific to those entities.
     - world.js: defines  World class, which manages map definitions and building.
-    - engine.js basic game engine provided, modified to support the propietary code */
+    - engine.js basic game engine provided, modified to support the propietary code 
+    */
 
 game = new Game();
 
