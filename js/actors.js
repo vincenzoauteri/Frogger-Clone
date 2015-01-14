@@ -1,6 +1,7 @@
-//Parent class for the actor entity, according to the pseudoclassical pattern.
-//Common between Player and Enemy, has a positon,
-//speed and render methods
+/* Parent class for the Actor entity, according to the pseudoclassical pattern.
+   Parent class of Player and Enemy, has a positon,
+   speed and render methods */
+  
 var Actor = function(sprite) {
     //Actor position (in pixels coordinate space)
     this.position= {
@@ -14,37 +15,42 @@ var Actor = function(sprite) {
         y: 0
     };
 
-    //Won't render if set to false 
+    //Entity won't render if set to false 
     this.draw = false;
 
-    //The image/sprite for the actor
+    //The image/sprite resource for the actor
     this.sprite = sprite;
 }
 
-// Init the actor with a tile Id
+/* Init function for the Actor entity */
 Actor.prototype.init = function(tile) {
     this.tile.x = tile.x;
     this.tile.y = tile.y;
     this.draw = true;
 }
 
-//Draws the actor on the screen
+/* Draws the Actor on screen */
 Actor.prototype.render = function() {
     if (this.draw) {
         ctx.drawImage(Resources.get(this.sprite), this.position.x, this.position.y);
     }
 }
 
-//Draws the actor on the screen
+/* Updates the Actor position in the world */
 Actor.prototype.update = function(world) {
     this.position.x = this.tile.x * world.tileSize.x;
+    //Centers the sprite on the tile for the y axis
     this.position.y = this.tile.y * world.tileSize.y - world.tileSize.y/2;
 }
 
-// Player variable, subclass of actor 
+/* Player entity, subclass of Actor 
+   Manages the player character sprite in the world.
+   Shares render method but overrides init
+   and update functions */
 var Player = function(sprite) {
     Actor.call(this, sprite);
-    //Actor movement (in tiles, not pixels)
+    //Actor movement step(in tiles, not pixels)
+    //Updated depending on keyboard input
     this.step = {
         x: 0,
         y: 0
@@ -56,31 +62,38 @@ var Player = function(sprite) {
         y: 0
     };
 }
+//Sublclassing to Actor according to pseudoclassical pattern
 Player.prototype = Object.create(Actor.prototype);
 Player.prototype.constructor = Player;
 
-//Player init
-//Overrides Actor's 
+/* Player initialization
+    -Resets number of lives
+    -Set step size depending on tile size */
 Player.prototype.init = function(world) {
     //Player lives
     this.lives = 3;
+    //Set step size
     this.stepSize.x = world.tileSize.x; 
-    this.stepSize.y = world.tileSize.y; 
+    this.stepSize.y = world.tileSize.y;
+    //Enable rendering
     this.draw = true;
 };
 
-//Player update
-//Overrides Actor's 
+/* Player update function
+   Keyboard input sets the step variable,
+   and this function updates the player characters coordinates
+   according to the new value */
+ 
 Player.prototype.update = function(dt, world) {
-    //Player moves 1 tile at a time
-    //Calculate new coordinates in tiles space
+    //Player moves 1 tile at a time, calculates new coordinates in tiles space
     if (this.draw) {
         var newTile = {
+            //Calculates new tile according to current one and new player input
             x: this.tile.x + this.step.x,
             y: this.tile.y + this.step.y
         };
 
-        //Check for boundaries
+        //Checks for boundaries in case player would go outside the map
         if (world.isTileWalkable(newTile)) { 
             if (newTile.x >= 0 && newTile.x < world.tileMap.totalTiles.x){
                 //Update position in tiles space
@@ -106,16 +119,16 @@ Player.prototype.update = function(dt, world) {
     this.step.y = 0;
 }
 
-//Resets player at the start tile in the map
+/* Resets player at the start tile in the map */
 Player.prototype.resetsPosition= function(world) {
+    //Starting tile depends on the world map
     this.tile.x = world.tileMap.playerStartTile.x;
     this.tile.y = world.tileMap.playerStartTile.y;
 }
 
-//Updates coordinates depending on input
+/* Updates player step depending on input */
 Player.prototype.handleInput= function(keyPressed) {
-    //Input handling
-    //Player is moved according to the pressed key, speed and delta 
+    //Callback for keyboard input. Updates the player current step used in the update method
     switch (keyPressed) {
         case 'left':
             this.step.x = -1;
@@ -132,47 +145,47 @@ Player.prototype.handleInput= function(keyPressed) {
     }
 }
 
-//Enemy class, subclass of actor
+/* Enemy entity, subclass of Actor 
+   Manages the bugs running around the world.
+   Shares render method but overrides init
+   and update functions */
 var Enemy = function(sprite) {
     Actor.call(this, sprite);
     //Actor's speed.
     this.speed = 0;
 }
-
+//Subclassing to Actor
 Enemy.prototype = Object.create(Actor.prototype);
 Enemy.prototype.constructor = Enemy;
 
-//Enemy init
-//Overrides Actor's 
+/* Enemy initialization 
+   Enemies are spawned on random rows and tiles at the start of the level */
 Enemy.prototype.init = function(startLevel, world) {
-   //Enemies are spawned at a random tile 
+   //Enemies are spawned at a random row 
    var rows = world.enemyRows();
    var randomRow = rows[Math.floor(Math.random()*rows.length)];
    var randomColumn = Math.floor(Math.random()*world.tileMap.totalTiles.x);
    //If it's the first init we spawn in the middle, otherwise from the left side
-   //hidden
    if (startLevel) {
        this.position.x = world.tileSize.x*randomColumn; 
    } else {
        this.position.x = -world.tileSize.x;
    }
    this.position.y = randomRow * world.tileSize.y - world.tileSize.y/2; 
+   //Enemy speed is random as well, between 100 and 300.
    this.speed = 100 + Math.random()*200;
    this.draw = true;
 }
 
-// Update the enemy's position, required method for Game
-// Parameter: dt, a time delta between ticks
+/* Update the enemy's position, required method by the engine
+    Parameter: dt, a time delta between ticks */
 Enemy.prototype.update = function(dt, world) {
     if (this.draw) {
-        // Enemy moves horizontally 
+        // Enemy moves horizontally by pixels, not by tiles like the player
         var newX = this.position.x + dt*this.speed;
 
-        //Checking for map boundaries
-        //When the enemy reaches the border it respawns at the beginning 
 
-        //Enemies are not created and destroyed, they are reused for the duration
-        //of the Game
+        //When the enemy reaches the border it respawns at the beginning 
         if (newX < (world.sizeInPixels.width + world.tileSize.x)) {
             this.position.x = newX;
         } else {
