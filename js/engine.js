@@ -26,7 +26,8 @@ var Engine = (function(global) {
         lastTime;
 
 
-    //Will be overridden when World is initialized
+    //Canvas width and height. 
+    //Predefinite values be overridden when World is initialized, since maps will be bigger than this.
     canvas.width = 505;
     canvas.height = 606;
 
@@ -76,7 +77,7 @@ var Engine = (function(global) {
         var pixelDimensions = { width: canvas.width, height: canvas.height };
         var tileSize = { x: 101, y: 83 };
 
-        //game is the global instance of the Game class declared in app.js
+        //game is the global instance of the Game class defined in game.js
         game.init(pixelDimensions, tileSize);
 
         reset();
@@ -93,10 +94,13 @@ var Engine = (function(global) {
      * on the entities themselves within your app.js file).
      */
     function update(dt) {
+        //Call utility function 
         updateEntities(dt);
 
+        //Collision detection. Defined in game.js
         game.checkCollisions();
 
+        //Checking for victory or defeat conditions, that will reset the state
         if (game.checkVictory() || game.checkDefeat()) {
             reset();
         }
@@ -113,13 +117,15 @@ var Engine = (function(global) {
      * render methods.
      */
     function updateEntities(dt) {
-        //Our entities are the player, enemies, the princess and the extras
+        //Player update. 
         game.player.update(dt, game.world);
 
+        //Goes through the whole allEnemy array and updates enemies one by one
         game.allEnemies.forEach(function(enemy) {
             enemy.update(dt, game.world);
         });
-
+        
+        //Extras. static characters
         game.princess.update(game.world);
         game.extras.forEach(function(extra) {
             extra.update(game.world);
@@ -139,6 +145,7 @@ var Engine = (function(global) {
         ctx.fillStyle = 'white';
         ctx.fillRect(0,0,ctx.canvas.clientWidth,ctx.canvas.clientHeight);
 
+        //Number of rows and columns changes depending on the level number
         var numRows = game.world.tileMap.totalTiles.y;
         var numCols = game.world.tileMap.totalTiles.x;
         var row, col;
@@ -198,17 +205,22 @@ var Engine = (function(global) {
         canvas.width  = 101 * game.world.tileMap.totalTiles.x;
         canvas.height = 101 * game.world.tileMap.totalTiles.y;
         var pixelDimensions = { width: canvas.width, height: canvas.height };
+        //Updates world size 
         game.world.sizeInPixels.width = pixelDimensions.width;
         game.world.sizeInPixels.height = pixelDimensions.height;
 
     }
-    //Drawing the topbar
-    //I'm saving the context properties and restore them once drawn,
-    //to not mess up the rest of the render code for images 
+    /*
+        Drawing the topbar
+        I'm saving the context properties and restore them once drawn,
+        to not mess up the rest of the render code for images 
+    */
     function renderTopBar() {
-       
+        //Saving context
         ctx.save();
+        //Transparency
         ctx.globalAlpha = 0.7; 
+        //Text formatting
         ctx.font = '28px Impact'; 
         ctx.lineWidth = 1; 
         ctx.textAlign= 'start'; 
